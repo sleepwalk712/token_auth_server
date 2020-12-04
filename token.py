@@ -1,5 +1,10 @@
-import os
+import datetime
+from typing import Dict
+
 import jwt
+
+from payload import Payload
+from secret_key import SecretKeyHandler
 
 
 class TokenHandler:
@@ -10,28 +15,44 @@ class TokenHandler:
     def encode_auth_token(
         self,
         user_id: str,
-        role: str,
+        create_time: int,
+        expire_time: int,
         secret_key: str,
     ) -> str:
         try:
-            payload = {
-                'id': user_id,
-                'role': role
-            }
+            payload = Payload(sub=user_id, iat=create_time, exp=expire_time)
             return jwt.encode(
                 payload,
                 secret_key,
-                algorithm='HS256'
+                algorithm='HS256',
             )
         except Exception as e:
             return e
 
-    def generate_secret_key(self):
-        return os.urandom(24)
+    def decode_auth_token(
+        self,
+        token: str,
+        secret_key: str,
+    ) -> Dict[str, str]:
+        try:
+            payload = jwt.decode(token, secret_key)
+            return payload
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token.'
 
 
 if __name__ == "__main__":
-    token_handler = TokenHandler
-    key = token_handler.generate_secret_key()
-    token = token_handler.encode_auth_token(user_id='a001', role='project_admin', secret_key=key)
+    secret_key_handler = SecretKeyHandler()
+    key = secret_key_handler.generate_auth_key()
+    token_handler = TokenHandler()
+    token = token_handler.encode_auth_token(
+        user_id='a001',
+        create_time=datetime.datetime.utcnow(),
+        expire_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=5),
+        secret_key=key,
+    )
     print(token)
+    payload = token_handler.decode_auth_token(token, key)
+    print(payload)
