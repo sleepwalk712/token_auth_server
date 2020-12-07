@@ -1,12 +1,12 @@
 version: "3"
 
 services:
-    token_auth_server:
+    test:
         image: "token_auth_server"
-        container_name: "token_auth_server"
+        container_name: "test"
         working_dir: /token_auth_server
         environment:
             - PYTHONPATH=/
         volumes:
             - .:/token_auth_server
-        command: ["python", "./server/token.py"]
+        command: ["pytest"]

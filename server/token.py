@@ -1,10 +1,9 @@
 import datetime
-from typing import Dict
 
 import jwt
 
-from payload import Payload
-from secret_key import SecretKeyHandler
+from token_auth_server.server.payload import Payload
+from token_auth_server.server.secret_key import SecretKeyHandler
 
 
 class TokenHandler:
@@ -33,9 +32,9 @@ class TokenHandler:
         self,
         token: str,
         secret_key: str,
-    ) -> Dict[str, str]:
+    ) -> Payload:
         try:
-            payload = jwt.decode(token, secret_key)
+            payload = jwt.decode(jwt=token, key=secret_key, algorithms='HS256')
             return payload
         except jwt.ExpiredSignatureError:
             return 'Signature expired.'
@@ -50,9 +49,10 @@ if __name__ == "__main__":
     token = token_handler.encode_auth_token(
         user_id='a001',
         create_time=datetime.datetime.utcnow(),
-        expire_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=5),
+        expire_time=datetime.datetime.utcnow() + datetime.timedelta(days=50000),
         secret_key=key,
     )
+    print(key)
     print(token)
     payload = token_handler.decode_auth_token(token, key)
     print(payload)
